@@ -11,41 +11,9 @@ import random
 
 import cocos
 from cocos.director import director
+from cocos.actions import Delay, Rotate
 
 import pyglet
-
-
-class KeyDisplay(cocos.layer.Layer):
-
-    is_event_handler = True     #: enable pyglet's events
-
-    def __init__(self):
-
-        super(KeyDisplay, self).__init__()
-
-        self.text = cocos.text.Label("", x=100, y=280)
-
-        # To keep track of which keys are pressed:
-        self.keys_pressed = set()
-        self.update_text()
-        self.add(self.text)
-
-    def update_text(self):
-        key_names = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
-        text = 'Keys: ' + ','.join(key_names)
-        # Update self.text
-        self.text.element.text = text
-
-    def on_key_press(self, key, modifiers):
-
-        self.keys_pressed.add(key)
-        self.update_text()
-
-    def on_key_release(self, key, modifiers):
-
-        self.keys_pressed.discard(key)
-        self.update_text()
-
 
 class Scores(cocos.layer.Layer):
     def __init__(self):
@@ -58,7 +26,7 @@ class Scores(cocos.layer.Layer):
 
         self.hits = 0
         self.misses = 0
-        self.hits_goal = 15
+        self.hits_goal = 1
         self.misses_goal = 15
 
         # Create hits label 10% from left border
@@ -86,6 +54,7 @@ class UserPaddle(cocos.sprite.Sprite):
         self.x_pos = self.width/2
         self.y_pos = 120
         self.speed = 5
+        self.position = self.x_pos, self.y_pos
         # self.c = 0
 
         sprite = cocos.sprite.Sprite('Resources/Paddle.png')
@@ -147,12 +116,20 @@ class Ball(cocos.sprite.Sprite):
             else:
                 self.set_dir(3*math.pi - self.dir)
 
-class IntroScene(cocos.layer.Layer):
-
+class IntroText(cocos.layer.Layer):
     is_event_handler = True
-
     def __init__(self):
-        super(IntroScene, self).__init__()
+        super(IntroText, self).__init__()
+        self.text = cocos.text.Label("x", x=director.get_window_size()[0]/3,
+                                     y=director.get_window_size()[1]/2)
+
+        self.text.element.text = "Welcome to pong, click to begin"
+        self.add(self.text)
+
+    def on_mouse_press(self, x, y, buttons, modifiers):
+
+        director.replace(main_scene)
+
 
 
 
@@ -245,7 +222,20 @@ class WorldView(cocos.layer.Layer):
                 self.labels.misses += 1
                 self.labels.update_text()
 
+            if self.labels.hits >= self.labels.hits_goal:
+                director.replace(intro_scene)
+
+
 if __name__ == "__main__":
     director.init(resizable=True)
     # Run a scene with our event displayers:
-    director.run(cocos.scene.Scene(WorldView()))
+    intro_scene = cocos.scene.Scene()
+    main_scene = cocos.scene.Scene()
+
+
+
+    intro_scene.add(IntroText())
+    main_scene.add(WorldView())
+
+    director.run(intro_scene)
+    #director.run(cocos.scene.Scene(IntroScene()))
