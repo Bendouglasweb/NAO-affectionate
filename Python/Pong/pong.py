@@ -46,6 +46,39 @@ class KeyDisplay(cocos.layer.Layer):
         self.keys_pressed.discard(key)
         self.update_text()
 
+
+class Scores(cocos.layer.Layer):
+    def __init__(self):
+        super(Scores,self).__init__()
+
+        win_x = director.get_window_size()[0]
+        win_y = director.get_window_size()[1]
+        self.hits_pos = [0.1 * win_x,win_y-20]
+        self.miss_pos = [0.4 * win_x,win_y-20]
+
+        self.hits = 0
+        self.misses = 0
+        self.hits_goal = 15
+        self.misses_goal = 15
+
+        # Create hits label 10% from left border
+        self.hits_label = cocos.text.Label("", x=self.hits_pos[0], y=self.hits_pos[1])
+
+        # Create misses label 40% from left border
+        self.miss_label = cocos.text.Label("", x=self.miss_pos[0], y=self.miss_pos[1])
+
+        self.add(self.hits_label)
+        self.add(self.miss_label)
+
+    def update_text(self):
+        self.hits_label.element.text = "Hits: " + str(self.hits) + " / " + str(self.hits_goal)
+        self.miss_label.element.text = "Misses: " + str(self.misses) + " / " + str(
+                self.misses_goal)
+
+
+
+
+
 class UserPaddle(cocos.sprite.Sprite):
 
     def __init__(self,img='Resources/Paddle.png'):
@@ -114,6 +147,13 @@ class Ball(cocos.sprite.Sprite):
             else:
                 self.set_dir(3*math.pi - self.dir)
 
+class IntroScene(cocos.layer.Layer):
+
+    is_event_handler = True
+
+    def __init__(self):
+        super(IntroScene, self).__init__()
+
 
 
 class WorldView(cocos.layer.Layer):
@@ -129,12 +169,16 @@ class WorldView(cocos.layer.Layer):
         self.user = UserPaddle()
         self.ball = Ball()
 
+        self.labels = Scores()
+        self.labels.update_text()
+
         #Schedule function to be called every frame of game
         self.schedule(self.update)
 
         # Add paddle to screen
         self.add(self.user)
         self.add(self.ball)
+        self.add(self.labels)
         self.ball.reset()
 
 
@@ -191,12 +235,15 @@ class WorldView(cocos.layer.Layer):
             #self.ball.x_pos += 5
             if self.ball.y_pos > (self.user.y_pos - self.user.height/2) and self.ball.y_pos < (self.user.y_pos + self.user.height/2):
                 self.ball.bounce("PADDLE")
+                self.labels.hits += 1
+                self.labels.update_text()
             elif self.ball.x_pos < 0:
                 self.ball.x_pos = win_x/2
                 self.ball.y_pos = win_y/2
                 self.ball.position = win_x/2,win_y/2
                 self.ball.reset()
-
+                self.labels.misses += 1
+                self.labels.update_text()
 
 if __name__ == "__main__":
     director.init(resizable=True)
