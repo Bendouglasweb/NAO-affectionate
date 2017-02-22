@@ -117,13 +117,14 @@ class Ball(cocos.sprite.Sprite):
                 self.set_dir(3*math.pi - self.dir)
 
 class IntroText(cocos.layer.Layer):
+    global var
     is_event_handler = True
     def __init__(self):
         super(IntroText, self).__init__()
         self.text = cocos.text.Label("x", x=director.get_window_size()[0]/3,
                                      y=director.get_window_size()[1]/2)
 
-        self.text.element.text = "Welcome to pong, click to begin"
+        self.text.element.text = "Welcome to pong!"
         self.add(self.text)
 
     def on_mouse_press(self, x, y, buttons, modifiers):
@@ -227,10 +228,15 @@ class WorldView(cocos.layer.Layer):
 
 
 if __name__ == "__main__":
+    global var
+    var = 1
+
     director.init(resizable=True)
     # Run a scene with our event displayers:
     intro_scene = cocos.scene.Scene()
     main_scene = cocos.scene.Scene()
+
+
 
 
 
