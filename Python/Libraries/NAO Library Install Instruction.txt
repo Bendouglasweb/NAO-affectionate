@@ -1,0 +1,9 @@
+Instructions for installing the NAO library can be found at:
+
+http://doc.aldebaran.com/2-1/dev/python/install_guide.html
+
+However, these may not work for you. A workaround is to simply copy the contents of the naoqi library into your site-packages folder,
+which may be located at C:\Users\UserNameHere\Anaconda2_32\Lib\site-packages if you used Anaconda to install.
+
+Some notes:
+	1) You must be using 32 bit, 2.7 Python. Python3 will not work with the project. 
