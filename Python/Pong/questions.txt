@@ -1,0 +1,47 @@
+* This file holds the questions input to the Python Pong game
+* The text can be changed for each question by simply changing the text in this file. 
+* Each question can have up to six lines of text
+* Each question should be separated by exactly one line that starts with a dash (-) (can be more than one dash)
+* There should not be a dashed line after the last question
+* There can be an indefinite number of questions
+* Lines with no text are ignored, as well as ones that start with a *
+
+--------------------------------------------------------------------------------
+question_number=1
+line_1=Please rate how much you agree or disagree with the following statement:
+line_2=
+line_3=I experienced the game as difficult.
+left_option=Strongly Agree
+right_option=Strongly Disagree
+
+--------------------------------------------------------------------------------
+question_number=2
+line_1=Please rate how much you agree or disagree with the following statement:
+line_2=
+line_3=I was frustrated with the keyboard delays.
+left_option=Strongly Agree
+right_option=Strongly Disagree
+
+--------------------------------------------------------------------------------
+question_number=3
+line_1=Please rate how much you agree or disagree with the following statement:
+line_2=
+line_3=I enjoyed playing the game.
+left_option=Strongly Agree
+right_option=Strongly Disagree
+
+--------------------------------------------------------------------------------
+question_number=4
+line_1=Please rate how much you agree or disagree with the following statement:
+line_2=
+line_3=I performed well in the game.
+left_option=Strongly Agree
+right_option=Strongly Disagree
+
+--------------------------------------------------------------------------------
+question_number=5
+line_1=Please rate how much you agree or disagree with the following statement:
+line_2=
+line_3=I was bored while playing the game.
+left_option=Strongly Agree
+right_option=Strongly Disagree

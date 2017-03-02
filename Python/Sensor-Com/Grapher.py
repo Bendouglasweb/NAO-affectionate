@@ -49,7 +49,7 @@ from gsr_features import gen_features
 
 # ---- Settings to change ----
 
-nao_ip = "192.168.1.137"    # NAO Robot IP Address
+nao_ip = "192.168.1.136"    # NAO Robot IP Address
 nao_port = 9559             # NAO Robot Port
 nao_affectionate = 1        # 0 = non affectionate, 1 = affectionate
 
@@ -81,10 +81,10 @@ bg_sock = context.socket(zmq.REP)
 bg_sock.bind("tcp://127.0.0.1:5678")           # This is the IP address and port.
 bg_sock.RCVTIMEO = 3000            # Timeout for ZeroMQ of 3 seconds
 
-# ZeroMQ socket used for Java com
-java_sock = context.socket(zmq.REP)
-java_sock.bind("tcp://127.0.0.1:5679")          # This is the IP address and port.
-java_sock.RCVTIMEO = 100                        # Timeout for ZeroMQ
+# ZeroMQ socket used for Pong com
+pong_sock = context.socket(zmq.REP)
+pong_sock.bind("tcp://127.0.0.1:5679")          # This is the IP address and port.
+pong_sock.RCVTIMEO = 100                        # Timeout for ZeroMQ
 
 # ---- NAO Robot Elements ----
 if skip_nao == 0:
@@ -99,18 +99,18 @@ if skip_nao == 0:
 
 # Simple wrapper function used for multi-threading
 def nao_speak(message):
-    postureProxy.goToPosture("Crouch",0.3)
+    # postureProxy.goToPosture("Crouch",0.3)
     nao_move("right")
     tts.say(message)
     nao_move("left")
 
 def nao_speak_sorry(message):
-    postureProxy.goToPosture("Crouch",0.2)
+    # postureProxy.goToPosture("Crouch",0.2)
     nao_move("bow")
     tts.setParameter("pitchShift", 1.0)
     tts.say(message)
     tts.setParameter("pitchShift", 1.1)
-    postureProxy.goToPosture("Crouch",0.2)
+    # postureProxy.goToPosture("Crouch",0.2)
     nao_move("left")
 
 def nao_move(action):
@@ -146,7 +146,7 @@ def nao_move(action):
     motionProxy.wbEnableEffectorControl(effectorName, isEnabled)
 
 def nao_intro():
-    motionProxy.wakeUp()
+    #motionProxy.wakeUp()
     #postureProxy.goToPosture("Sit",0.3)
 
     tts.say("Hi, I'm Lucky. Lucky the robot.")
@@ -163,7 +163,7 @@ def nao_intro():
 
 
 
-    postureProxy.goToPosture("Crouch",0.3)
+    # postureProxy.goToPosture("Crouch",0.3)
     motionProxy.rest()
     # nao_move("left")
 
@@ -250,7 +250,7 @@ feature_f = open(feature_filename, 'w+')
 # Log start time and formatting
 start_time_formatted = time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time()))
 data_f.write("Script started at: " + start_time_formatted + ". Data formatted as [PPG,GSR,TMP,"
-                                                            "Trial Num]\n")
+                                                            "Trial Num,On Instructions]\n")
 feature_f.write("Script started at: " + start_time_formatted + ". Data formatted as ")
 
 # ---- Session and Java communication variables ----
@@ -304,83 +304,91 @@ while True:
     except:
         continue
 
-    # Check for updates from Java
+    # Check for updates from Pong
     if count % 25 == 0:
-        file_open = 0
+
         try:
-            java_f = open(java_filename,'r')
-            file_open = 1
+            pong_msg = pong_sock.recv()
         except:
-            print "Java file hasn't been created yet"
+            continue
 
-        if file_open == 1:
+        try:
+            pong_sock.send("Rec")   # Reply that we received the message. Text is arbitrary
+            temp = pong_msg.split(",")
             log = []
-            log_s = java_f.readline()
-            java_f.close()
-            log_s = log_s.split(",")
-            for item in log_s:
+            for item in temp:
                 log.append(int(item))
-
-            # Check to see if we moved windows
-            if log[0] != current_window and log[0] != 0:
-
-                # Only do feature extraction if we have some data to work with
-                if (len(ppg_window_data) > 100 and len(gsr_window_data) > 100 and len(
-                        tmp_window_data) > 100):
-                    # Find features for previous window
-                    features = gen_features(ppg_window_data,gsr_window_data,tmp_window_data,
-                                            collection_rate,sample_period_ms)
-                    # Write features to file
-                    for feat in features:
-                        feature_f.write(str(feat) + ",")
-
-                    feature_f.write(str(current_window) + "\n")
-
-                # Clear window arrays for data
-                ppg_window_data = []
-                gsr_window_data = []
-                tmp_window_data = []
-
-                current_window = log[0]
-                print "Moved to new window, now on window #" + str(log[0])
-
-                if skip_nao == 0:
-                    if log[4] == 1 or log[5] == 1:
-
-                        if (nao_affectionate == 1):
-                            nao_msg = "I noticed you had some glitches last round. We're sorry about" \
-                            " that... "
-                            if log[1] > 1:
-                                nao_msg += "You still managed to hit " + str(log[1]) + " times!"
-                            elif log[1] == 1:
-                                nao_msg += "You still managed to hit " + str(log[1]) + " time!"
-                            elif log[1] == 0:
-                                nao_msg += "You did not hit any last round."
-
-                            thread.start_new_thread(nao_speak_sorry,(nao_msg,))
-
-                        else:
-                            nao_msg = "You've finished this round!"
-                            if log[1] > 1:
-                                nao_msg += " ...Last round you hit " + str(log[1]) + " times!"
-                            elif log[1] == 1:
-                                nao_msg += " ...Last round you hit " + str(log[1]) + " time!"
-                            elif log[1] == 0:
-                                nao_msg += "You did not hit any last round."
+            print(log)
+        except:
+            pass
 
 
-                            thread.start_new_thread(nao_speak,(nao_msg,))
+
+        # pong_msg[0] = current window
+
+        # Check to see if we moved windows
+        if log[0] != current_window and log[0] != 0:
+
+            # Only do feature extraction if we have some data to work with
+            if (len(ppg_window_data) > 100 and len(gsr_window_data) > 100 and len(
+                    tmp_window_data) > 100):
+                # Find features for previous window
+                features = gen_features(ppg_window_data,gsr_window_data,tmp_window_data,
+                                        collection_rate,sample_period_ms)
+                # Write features to file
+                for feat in features:
+                    feature_f.write(str(feat) + ",")
+
+                feature_f.write(str(current_window) + "\n")
+
+            # Clear window arrays for data
+            ppg_window_data = []
+            gsr_window_data = []
+            tmp_window_data = []
+
+            current_window = log[0]
+            print "Moved to new window, now on window #" + str(log[0])
+
+            if skip_nao == 0:
+                if log[4] == 1: # If glitches
+
+                    if (nao_affectionate == 1):
+                        nao_msg = "I noticed you had some glitches last round. We're sorry about" \
+                        " that... "
+                        if log[2] > 1:
+                            nao_msg += "You still managed to hit " + str(log[2]) + " times!"
+                        elif log[2] == 1:
+                            nao_msg += "You still managed to hit " + str(log[2]) + " time!"
+                        elif log[2] == 0:
+                            nao_msg += "You did not hit any last round."
+
+                        thread.start_new_thread(nao_speak_sorry,(nao_msg,))
 
                     else:
                         nao_msg = "You've finished this round!"
-                        if log[1] > 1:
-                            nao_msg += " ...Last round you hit " + str(log[1]) + " times!"
-                        elif log[1] == 1:
-                            nao_msg += " ...Last round you hit " + str(log[1]) + " time!"
-                        elif log[1] == 0:
+                        if log[2] > 1:
+                            nao_msg += " ...Last round you hit " + str(log[2]) + " times!"
+                        elif log[2] == 1:
+                            nao_msg += " ...Last round you hit " + str(log[2]) + " time!"
+                        elif log[2] == 0:
                             nao_msg += "You did not hit any last round."
 
+
                         thread.start_new_thread(nao_speak,(nao_msg,))
+
+                else:
+                    if log[0] == 1:
+                        nao_msg = "Let's begin!"
+                    else:
+                        nao_msg = "You've finished this round!"
+                        if log[2] > 1:
+                            nao_msg += " ...Last round you hit " + str(log[2]) + " times!"
+                        elif log[2] == 1:
+                            nao_msg += " ...Last round you hit " + str(log[2]) + " time!"
+                        elif log[2] == 0:
+                            nao_msg += "You did not hit any last round."
+
+                    thread.start_new_thread(nao_speak,(nao_msg,))
 
 
 
@@ -408,7 +416,8 @@ while True:
         TMP = int(data[i*6+4])*256 + int(data[i*6+5])   # " same with TMP
 
         # Write those values to a file
-        data_f.write(str(PPG) + "," + str(GSR) + "," + str(TMP) + "," + str(current_window) + "\n")
+        data_f.write(str(PPG) + "," + str(GSR) + "," + str(TMP) + "," + str(current_window) +
+                     "," + str(log[1]) + "\n")
 
         # Shift averaging arrays
         for x in range(ppg_avg_amount-1):
