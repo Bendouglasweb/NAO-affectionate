@@ -50,6 +50,7 @@ from gsr_features import gen_features
 
 # ---- Settings to change ----
 
+# CHANGE THIS to NAO's IP addess
 nao_ip = "192.168.1.136"    # NAO Robot IP Address
 nao_port = 9559             # NAO Robot Port
 nao_affectionate = 1        # 0 = non affectionate, 1 = affectionate

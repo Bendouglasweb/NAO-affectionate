@@ -131,6 +131,9 @@ import numpy as np
 
 import zmq
 
+# CHANGE THIS to com port for Bluegiga bluetooth dongle, found under device manager
+bluegiga_com_port = "com6"
+
 ble = 0
 ser = 0
 peripheral_list = []
@@ -330,7 +333,7 @@ def main():
     p = optparse.OptionParser(description='BGLib Demo: Heart Rate Collector v' + __version__)
 
     # set defaults for options
-    p.set_defaults(port="com6", baud=9600, packet=False, debug=False)
+    p.set_defaults(port=bluegiga_com_port, baud=9600, packet=False, debug=False)
 
     # create serial port options argument group
     group = optparse.OptionGroup(p, "Connection Options")
