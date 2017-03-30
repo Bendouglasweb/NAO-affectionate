@@ -157,6 +157,11 @@ class Ball(cocos.sprite.Sprite):
             elif side == "PADDLE":
                 self.x_pos += 10
 
+    def move(self):
+        self.x_pos += self.vel * math.cos(self.dir)
+        self.y_pos += self.vel * math.sin(self.dir)
+        self.position = self.x_pos, self.y_pos
+
 
 class IntroText(cocos.layer.Layer):
     global var
@@ -182,6 +187,8 @@ class IntroText(cocos.layer.Layer):
 
 
 class OverText(cocos.layer.ColorLayer):
+    is_event_handler = True
+
     def __init__(self):
         super(OverText, self).__init__(0,0,0,240)
         wx = director.get_window_size()[0]
@@ -206,18 +213,47 @@ class OverText(cocos.layer.ColorLayer):
                                      font_name="Calibri",
                                      font_size=18)
 
+        self.next_button = cocos.layer.ColorLayer(100, 0, 0, 255)
+        self.next_button.width = int(wx * 0.25)
+        self.next_button.height = int(wy * 0.08)
+        self.next_button.position = int(wx/2 - self.next_button.width/2), int(wy*0.1)
+
+        self.next_text = cocos.text.Label()
+        self.next_text.element.font_name = "Calibri"
+        self.next_text.element.font_size = 18
+        self.next_text.position = int(wx/2 - self.next_button.width/6), int(wy*0.125)
+        self.next_text.element.text = "Next"
 
         self.add(self.text1)
         self.add(self.text2)
         self.add(self.text3)
         self.add(self.text4)
-
+        self.add(self.next_button)
+        self.add(self.next_text)
 
     def update_text(self, round_num, hits, misses, time):
         self.text1.element.text = "Round " + str(round_num)
         self.text2.element.text = "Your goal is " + str(hits) + " hits."
         self.text3.element.text = "You can make " + str(misses) + " misses."
         self.text4.element.text = "You have " + str(time) + " seconds in this round."
+
+    def set_text(self, line_1, line_2, line_3, line_4):
+        self.text1.element.text = line_1
+        self.text2.element.text = line_2
+        self.text3.element.text = line_3
+        self.text4.element.text = line_4
+
+    def button_timer(self, t):
+        self.button_visible(False)
+        threading.Timer(t, self.button_visible(True)).start()
+
+    def button_visible(self, setting):
+        if setting:
+            self.next_button.visible = True
+            self.next_text.visible = True
+        elif not setting:
+            self.next_button.visible = False
+            self.next_text.visible = False
 
 
 class WorldView(cocos.layer.Layer):
@@ -236,6 +272,19 @@ class WorldView(cocos.layer.Layer):
         self.on_round = 0
         self.options = []
         self.freeze = 1      # 1 = pause game; 0 = play
+
+        self.state = 0
+        # 0:    Program just started
+        # 1:    Displaying introduction text
+        # 2:    Demo 1 introduction text
+        # 3:    Playing demo 1
+        # 4:    Demo 2 introduction text
+        # 5:    Playing demo 2
+        # 6:    In between demos and game
+        # 7:    In pre-round instructions
+        # 8:    Playing current round
+        # 9:    Game finished, post instructions
+        # 10:   In questions
 
         self.user = UserPaddle()
         self.ball = Ball()
@@ -302,6 +351,8 @@ class WorldView(cocos.layer.Layer):
 
         self.labels.time_label.element.text = "Time: " + str(int(self.labels.end_time -
                                                                 time.time())) + "s"
+
+        # Get user input, glitch if desired.
         win_x = director.get_window_size()[0]
         win_y = director.get_window_size()[1]
         if self.keys[0] == 1:       # User wants to go up
@@ -325,9 +376,7 @@ class WorldView(cocos.layer.Layer):
                     self.user.move("DOWN")
 
         # Update ball position
-        self.ball.x_pos += self.ball.vel * math.cos(self.ball.dir)
-        self.ball.y_pos += self.ball.vel * math.sin(self.ball.dir)
-        self.ball.position = self.ball.x_pos,self.ball.y_pos
+        self.ball.move()
 
         # Detect bounce
         # Origin of ball is bottom left corner
@@ -338,15 +387,11 @@ class WorldView(cocos.layer.Layer):
         elif self.ball.x_pos > win_x-self.ball.width/2:
             self.ball.bounce("RIGHT")
         elif self.ball.x_pos < self.user.width + self.ball.width/2:
-            #self.ball.x_pos += 5
             if self.ball.y_pos > (self.user.y_pos - self.user.height/2) and self.ball.y_pos < (self.user.y_pos + self.user.height/2):
                 self.ball.bounce("PADDLE")
                 self.labels.hits += 1
                 self.labels.update_text()
             elif self.ball.x_pos < 0:
-                self.ball.x_pos = win_x/2
-                self.ball.y_pos = win_y/2
-                self.ball.position = win_x/2,win_y/2
                 self.ball.reset()
                 self.labels.misses += 1
                 self.labels.update_text()
@@ -445,8 +490,6 @@ class WorldView(cocos.layer.Layer):
             threading.Timer(6,self.unfreeze).start()
 
 
-
-
 class Questions(cocos.layer.Layer):
     is_event_handler = True
 
@@ -458,7 +501,7 @@ class Questions(cocos.layer.Layer):
 
         self.on_question = -1
         self.question_answers = []
-        self.selection = 0;
+        self.selection = 0
 
         # Add background boxes and numbers to screen for selection
         self.boxes = []
@@ -527,8 +570,6 @@ class Questions(cocos.layer.Layer):
                     for j in range(10):
                         self.boxes[j].color = 100, 0, 0
 
-
-
                     if i == 10:
                         self.boxes[i].color = 100, 0, 0
                         self.question_answers.append(self.selection+1)
@@ -576,7 +617,7 @@ class Questions(cocos.layer.Layer):
 
 if __name__ == "__main__":
 
-    skip_zmq = 0    # 0 = Talk to Graphing script, 1 = Skip zmq com
+    skip_zmq = 1    # 0 = Talk to Graphing script, 1 = Skip zmq com
 
     out_file = open("pong_output_file.txt","w")
 

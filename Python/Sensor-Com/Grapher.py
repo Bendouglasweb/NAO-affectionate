@@ -8,6 +8,7 @@ import glob
 import os
 import time
 from naoqi import ALProxy
+import almath
 
 from gsr_features import gen_features
 
@@ -114,38 +115,77 @@ def nao_speak_sorry(message):
     nao_move("left")
 
 def nao_move(action):
-    effectorName = "Head"
+    motionProxy.setStiffnesses("Head", 1.0)
+    # effectorName = "Head"
+    #
+    # # Active Head tracking
+    # isEnabled    = True
+    # motionProxy.wbEnableEffectorControl(effectorName, isEnabled)
+    #
+    # if action == "bow":     # Bow
+    #     targetCoordinateList = [
+    #     [ 00.0, +30.0,  00.0], # target 2
+    #     ]
+    # elif action == "left":   # Look Left
+    #     tracker.stopTracker()
+    #     targetCoordinateList = [
+    #     [ 00.0, 00.0,  +35.0] # target 2
+    #     ]
+    # elif action == "right":   # Look Right
+    #     targetCoordinateList = [
+    #     [ 00.0, 00.0,  -35.0] # target 2
+    #     ]
+    #     tracker.registerTarget("Face", 0.1)
+    #     tracker.track("Face")
+    #
+    # for targetCoordinate in targetCoordinateList:
+    #     targetCoordinate = [target*np.pi/180.0 for target in targetCoordinate]
+    #     motionProxy.wbSetEffectorControl(effectorName, targetCoordinate)
+    #     time.sleep(2)
+    #
+    # # Deactivate Head tracking
+    # isEnabled = False
+    # motionProxy.wbEnableEffectorControl(effectorName, isEnabled)
 
-    # Active Head tracking
-    isEnabled    = True
-    motionProxy.wbEnableEffectorControl(effectorName, isEnabled)
+    if action == "left":
+        print("Moving head left")
+        names      = ["HeadYaw"]
+        angleLists = [30.0*almath.TO_RAD]
+        timeLists  = [1.5]
+        isAbsolute = True
+        motionProxy.angleInterpolation(names, angleLists, timeLists, isAbsolute)
 
-    if action == "bow":     # Bow
-        targetCoordinateList = [
-        [ 00.0, +30.0,  00.0], # target 2
-        ]
-    elif action == "left":   # Look Left
-        tracker.stopTracker()
-        targetCoordinateList = [
-        [ 00.0, 00.0,  +35.0] # target 2
-        ]
-    elif action == "right":   # Look Right
-        targetCoordinateList = [
-        [ 00.0, 00.0,  -35.0] # target 2
-        ]
-        tracker.registerTarget("Face", 0.1)
-        tracker.track("Face")
+    elif action == "right":
+        names      = ["HeadYaw"]
+        angleLists = [-30.0*almath.TO_RAD]
+        timeLists  = [1.5]
+        isAbsolute = True
+        motionProxy.angleInterpolation(names, angleLists, timeLists, isAbsolute)
 
-    for targetCoordinate in targetCoordinateList:
-        targetCoordinate = [target*np.pi/180.0 for target in targetCoordinate]
-        motionProxy.wbSetEffectorControl(effectorName, targetCoordinate)
-        time.sleep(2)
+    elif action == "bow":
 
-    # Deactivate Head tracking
-    isEnabled = False
-    motionProxy.wbEnableEffectorControl(effectorName, isEnabled)
+        names      = ["HeadYaw"]
+        angleLists = [0*almath.TO_RAD]
+        timeLists  = [0.5]
+        isAbsolute = True
+        motionProxy.angleInterpolation(names, angleLists, timeLists, isAbsolute)
+
+        names      = ["HeadPitch"]
+        angleLists = [18.0*almath.TO_RAD]
+        timeLists  = [1]
+        isAbsolute = True
+        motionProxy.angleInterpolation(names, angleLists, timeLists, isAbsolute)
+        time.sleep(1.5)
+
+        angleLists = [0*almath.TO_RAD]
+        motionProxy.angleInterpolation(names, angleLists, timeLists, isAbsolute)
+
+
+
+    motionProxy.setStiffnesses("Head", 0.0)
 
 def nao_intro():
+    nao_move("left")
     #motionProxy.wakeUp()
     #postureProxy.goToPosture("Sit",0.3)
 
@@ -164,7 +204,6 @@ def nao_intro():
 
 
     # postureProxy.goToPosture("Crouch",0.3)
-    motionProxy.rest()
     # nao_move("left")
 
 def on_program_exit():
@@ -289,9 +328,9 @@ if skip_nao == 0:
 # tracker.stopTracker()
 
 time.sleep(2)
-
+log = [0,0,0,0]
 while True:
-
+    count += 1
     # First, we attempt to receive data from the Bluegiga-Com script
     try:
         mq_message = bg_sock.recv()                           # Receive message from ZeroMQ socket
@@ -303,13 +342,13 @@ while True:
         bg_sock.send("Rec")    # Reply that we have recieved that message. The text here is arbitrary.
     except:
         continue
-
     # Check for updates from Pong
     if count % 25 == 0:
-
+        print("Java loop" + str(count))
         try:
             pong_msg = pong_sock.recv()
         except:
+
             continue
 
         try:
@@ -327,7 +366,7 @@ while True:
         # pong_msg[0] = current window
 
         # Check to see if we moved windows
-        if log[0] != current_window and log[0] != 0:
+        if log[0] != current_window and log[0] != 0 and False:
 
             # Only do feature extraction if we have some data to work with
             if (len(ppg_window_data) > 100 and len(gsr_window_data) > 100 and len(

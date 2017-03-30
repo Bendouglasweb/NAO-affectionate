@@ -17,26 +17,15 @@ postureProxy = ALProxy("ALRobotPosture", nao_ip, nao_port)
 tts.setParameter("speed", 75)
 tts.setParameter("pitchShift", 1.1)
 
-# Wake up robot
-motionProxy.wakeUp()
+tts.say("Hi, I'm Lucky. Lucky the robot. I've lived here at yoo of ell for about four months "
+        ". I work with the researchers on their projects.")
+time.sleep(0.8)
+tts.say("It's nice to meet you! Do you like computer games?")
+time.sleep(0.8)
+tts.say("I'm going to watch you play a computer game. The researchers "
+        "have asked me to watch how the game goes")
+time.sleep(0.3)
+tts.say(" and tell you about your results. Let's start!")
 
-# Make NAO speak
-tts.say("Hi, I'm Lucky. Lucky the robot.")
-time.sleep(2)
-tts.say("You've finished this round!")
-time.sleep(2)
-tts.say("You still managed to hit 2 times!")
-time.sleep(2)
-tts.say("You did not hit any last round.")
-time.sleep(2)
 
-exit()
-
-# Send robot to Stand Init
-postureProxy.goToPosture("Stand", .8)
-
-time.sleep(2)
-
-# Go to rest position
-motionProxy.rest()
 
