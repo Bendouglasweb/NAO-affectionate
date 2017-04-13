@@ -1,0 +1,7 @@
+Python script, testing gathering of data.
+Test started at: 03-02-2017_17 06 41, test concluded at: 03-02-2017_17 16 41, for a total of 600 seconds.
+Number of samples collected: 0
+Average hz: 0.0
+
+Data:
+

@@ -59,7 +59,7 @@ nao_affectionate = 1        # 0 = non affectionate, 1 = affectionate
 enable_graphs = 1
 
 #Skip over NAO functions (i.e., don't try to connect to NAO or run any nao functions)
-skip_nao = 0               # 0 = Don't skip now, 1 = skip nao
+skip_nao = 1               # 0 = Don't skip now, 1 = skip nao
 
 num_data_points = 2000                      # Number of data points on the plot
 collection_rate = 150                       # Hz of sensor data
